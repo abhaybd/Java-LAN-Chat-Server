@@ -40,18 +40,19 @@ public class Client {
 			@Override
 			public void run() {
 				try (DatagramSocket socket = new DatagramSocket()){
-					for(int i = 96; i <= 111; i ++){ //96 111
-						for(int j = 0; j <= 255; j++){//0 255
-							if(Thread.interrupted()) return;
-							String ip = "10.49." + i + "." + j;//10.49
-							System.out.println("Testing " + ip + ":" + FIND_PORT);
-							InetAddress addr;
-							try{
-								addr = InetAddress.getByName(ip);
-								DatagramPacket packet = new DatagramPacket(new byte[0],0,addr,FIND_PORT);
-								socket.send(packet);
-							} catch (IOException e) {
-								e.printStackTrace();
+					NetworkUtils.Subnet sub = NetworkUtils.getSubnet();
+					for(int i = toInt(sub.minIp.getAddress()[0]); i <= toInt(sub.minIp.getAddress()[0]) + sub.range[0]; i++){
+						for(int j = toInt(sub.minIp.getAddress()[1]); j <= toInt(sub.minIp.getAddress()[1]) + sub.range[1]; j++){
+							for(int k = toInt(sub.minIp.getAddress()[2]); k <= toInt(sub.minIp.getAddress()[2]) + sub.range[2]; k++){
+								for(int l = toInt(sub.minIp.getAddress()[3]); l <= toInt(sub.minIp.getAddress()[3]) + sub.range[3]; l++){
+									try {
+										String ip = String.format("%1$d.%2$d.%3$d.%4$d", i,j,k,l);
+										System.out.println("Testing: " + ip);
+										socket.send(new DatagramPacket(new byte[0], 0, InetAddress.getByName(ip), FIND_PORT));
+									} catch (IOException e) {
+										//e.printStackTrace();
+									}
+								}
 							}
 						}
 					}
@@ -63,6 +64,11 @@ public class Client {
 		Thread t = new Thread(run);
 		t.start();
 		return t;
+	}
+	
+	private static int toInt(byte b){
+		int i = b;
+		return (i+256)%256;
 	}
 	
 	public ClientGUI gui;
